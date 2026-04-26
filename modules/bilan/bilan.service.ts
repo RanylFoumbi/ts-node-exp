@@ -2,6 +2,7 @@ import {
   BilanLevel,
   type Bilan,
   type BilanAnswer,
+  type BilanDimensions,
   type BilanParams,
 } from "../../shared/types/bilan.ts";
 
@@ -19,12 +20,12 @@ const QUESTIONNAIRE = [
 ];
 
 export class BilanService {
-  bilans = [
+  bilans: Bilan[] = [
     {
       id: "bilan-1761234567890",
       userId: "user123",
       score: 80,
-      level: "critical",
+      level: BilanLevel.critical,
       byDimension: {
         epanouissement: 85,
         maitrise_de_soi: 75,
@@ -32,13 +33,13 @@ export class BilanService {
         resilience: 80,
         estime_de_soi: 90,
       },
-      createdAt: "2026-04-26T14:30:00.000Z",
+      createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000),
     },
     {
       id: "bilan-1759456789012",
       userId: "user3",
       score: 65,
-      level: "good",
+      level: BilanLevel.Good,
       byDimension: {
         epanouissement: 70,
         maitrise_de_soi: 60,
@@ -46,7 +47,7 @@ export class BilanService {
         resilience: 65,
         estime_de_soi: 65,
       },
-      createdAt: "2026-03-15T10:00:00.000Z",
+      createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
     },
   ];
 
@@ -54,7 +55,7 @@ export class BilanService {
     const today = new Date().toISOString().split("T")[0];
     return this.bilans.some(
       (bilan) =>
-        bilan.userId === userId && bilan.createdAt.startsWith(String(today)),
+        bilan.userId === userId && bilan.createdAt.toISOString().split("T")[0] === today,
     );
   }
 
@@ -78,26 +79,44 @@ export class BilanService {
     }, {} as Record<string, number>);
 
     const byDimension: Record<string, number> = {};
-    dimensions.forEach((dimension) => {
+    dimensions.forEach((dimension: string) => {
       const questions = QUESTIONNAIRE.filter((q) => q.dimension === dimension);
       const totalSur100 = questions.reduce((sum, q) => sum + (((answersMap[q.id] || 0) * 100) / 5), 0);
       byDimension[dimension] = totalSur100 / questions.length;
     });
-    
+
     const score =
       Object.values(byDimension).reduce((sum, val) => sum + val, 0) /
       dimensions.length;
     return { score, byDimension };
   }
 
-  public submitBilan(params: BilanParams): Promise<Bilan> {
+  public async submitBilan(params: BilanParams): Promise<Bilan> {
     if (this._hasBilanToday(params.userId)) {
       throw new Error("Bilan already submitted today");
     }
-    return new Promise((resolve, reject) => {});
+   const unknownAnswer = params.answers.find(
+      (answer) => !QUESTIONNAIRE.some((q) => q.id === answer.questionId),
+    );
+    if (unknownAnswer) {
+
+      throw new Error(`Unknown questionId: ${unknownAnswer.questionId}`);
+    }
+    const { score, byDimension } = this._computeScore(params.answers);
+    const level = this._getLevel(score);
+    const newBilan: Bilan = {
+      id: `bilan-${Date.now()}`,
+      userId: params.userId,
+      score,
+      level: level as BilanLevel,
+      byDimension: byDimension as BilanDimensions,
+      createdAt: new Date(),
+    };
+    this.bilans.push(newBilan);
+    return Promise.resolve(newBilan);
   }
 
   public getHistory(userId: string): Bilan[] {
-    return [];
+    return this.bilans.filter((bilan) => bilan.userId === userId);
   }
 }

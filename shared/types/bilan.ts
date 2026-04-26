@@ -9,7 +9,7 @@ export enum BilanLevel {
   critical = 'critical',
 }
 
-type BilanDimensions = {
+export type BilanDimensions = {
   epanouissement: number;
   maitrise_de_soi: number;
   relations: number;

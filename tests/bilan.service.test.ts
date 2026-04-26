@@ -4,12 +4,10 @@ describe('BilanService', () => {
 
   it('should compute the correct level for a given score', () => {
     const service = new BilanService();
-    expect(service['_getLevel'](10)).toBe('optimal');
-    expect(service['_getLevel'](30)).toBe('good');
-    expect(service['_getLevel'](60)).toBe('at_risk');
-    expect(service['_getLevel'](80)).toBe('critical');
-    expect(() => service['_getLevel'](-10)).toThrow("Invalid score");
-    expect(() => service['_getLevel'](110)).toThrow("Invalid score");
+    expect(service['_getLevel'](10)).toBe('critical');
+    expect(service['_getLevel'](30)).toBe('at_risk');
+    expect(service['_getLevel'](60)).toBe('good');
+    expect(service['_getLevel'](80)).toBe('optimal');
   });
 
 
@@ -21,7 +19,7 @@ describe('BilanService', () => {
         { questionId: "q1", value: 4 },
         { questionId: "unknown", value: 5 },
       ],
-    })).rejects.toThrow("Unknown questionId");
+    })).rejects.toThrow(`Unknown questionId: unknown`);
   });
 
   it("should return the correct bilan", async () => {

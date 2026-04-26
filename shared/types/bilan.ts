@@ -23,5 +23,5 @@ export type Bilan = {
   score: number;
   level: BilanLevel;
   byDimension: BilanDimensions;
-  createdAt: string;
+  createdAt: Date;
 };

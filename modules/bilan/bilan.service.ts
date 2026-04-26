@@ -44,6 +44,8 @@ export class BilanService {
 
     }
 
-    public getHistory() {}
+    public getHistory(userId: string): Bilan[] {
+        return []
+    }
 
 }

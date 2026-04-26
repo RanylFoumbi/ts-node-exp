@@ -1,6 +1,6 @@
 export type BilanAnswer = { questionId: string; value: number };
 
-export type BilanParams = { answers: BilanAnswer[] };
+export type BilanParams = { userId: string; answers: BilanAnswer[] };
 
 export enum BilanLevel {
   Optimal = 'optimal',

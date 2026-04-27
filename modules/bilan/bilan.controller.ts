@@ -1,6 +1,6 @@
-import { Request, Response } from "express";
+import { type Request, type Response } from "express";
 import { CustomError } from "../../shared/errors.ts";
-import { BilanService } from "./bilan.service";
+import { BilanService } from "./bilan.service.ts";
 
 export class BilanController {
   constructor(private bilanService: BilanService) {

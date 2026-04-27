@@ -1,3 +1,4 @@
+import { CustomError } from "../../shared/errors.ts";
 import {
   BilanLevel,
   type Bilan,
@@ -55,7 +56,8 @@ export class BilanService {
     const today = new Date().toISOString().split("T")[0];
     return this.bilans.some(
       (bilan) =>
-        bilan.userId === userId && bilan.createdAt.toISOString().split("T")[0] === today,
+        bilan.userId === userId &&
+        bilan.createdAt.toISOString().split("T")[0] === today,
     );
   }
 
@@ -73,15 +75,21 @@ export class BilanService {
     const dimensions = Array.from(
       new Set(QUESTIONNAIRE.map((q) => q.dimension)),
     );
-    const answersMap = answers.reduce((prev, cur) => {
-      prev[cur.questionId] = cur.value;
-      return prev;
-    }, {} as Record<string, number>);
+    const answersMap = answers.reduce(
+      (prev, cur) => {
+        prev[cur.questionId] = cur.value;
+        return prev;
+      },
+      {} as Record<string, number>,
+    );
 
     const byDimension: Record<string, number> = {};
     dimensions.forEach((dimension: string) => {
       const questions = QUESTIONNAIRE.filter((q) => q.dimension === dimension);
-      const totalSur100 = questions.reduce((sum, q) => sum + (((answersMap[q.id] || 0) * 100) / 5), 0);
+      const totalSur100 = questions.reduce(
+        (sum, q) => sum + ((answersMap[q.id] || 0) * 100) / 5,
+        0,
+      );
       byDimension[dimension] = totalSur100 / questions.length;
     });
 
@@ -93,14 +101,13 @@ export class BilanService {
 
   public async submitBilan(params: BilanParams): Promise<Bilan> {
     if (this._hasBilanToday(params.userId)) {
-      throw new Error("Bilan already submitted today");
+      throw new CustomError("ALREADY_SUBMITTED_TODAY");
     }
-   const unknownAnswer = params.answers.find(
+    const unknownAnswer = params.answers.find(
       (answer) => !QUESTIONNAIRE.some((q) => q.id === answer.questionId),
     );
     if (unknownAnswer) {
-
-      throw new Error(`Unknown questionId: ${unknownAnswer.questionId}`);
+      throw new CustomError("UNKNOWN_QUESTION_ID", unknownAnswer.questionId);
     }
     const { score, byDimension } = this._computeScore(params.answers);
     const level = this._getLevel(score);
